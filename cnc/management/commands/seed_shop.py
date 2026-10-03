@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from basedata.models import Material, Partner
 from cnc.models import (
-    Drawing, Fixture, Inspection, Machine, MaterialLot, NcProgram, OutsourceOrder,
+    Drawing, Fixture, Inspection, Machine, MaintainOrder, MaterialLot, NcProgram, OutsourceOrder,
     Routing, RoutingStep, Tool, WorkOrder,
 )
 
@@ -25,6 +25,8 @@ class Command(BaseCommand):
         MaterialLot.objects.filter(heat_no__startswith=MARK).delete()
         OutsourceOrder.objects.filter(note__startswith=MARK).delete()
         Routing.objects.filter(name__startswith=MARK).delete()
+        MaintainOrder.objects.filter(machine__name__startswith=MARK).delete()
+        MaintainOrder.objects.filter(note__startswith=MARK).delete()
         Machine.objects.filter(name__startswith=MARK).delete()
         Tool.objects.filter(name__startswith=MARK).delete()
         Fixture.objects.filter(name__startswith=MARK).delete()

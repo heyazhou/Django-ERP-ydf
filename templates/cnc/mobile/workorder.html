@@ -43,6 +43,28 @@
   {% endif %}
 </div>
 <div class="card">
+  <h2>用料与成本</h2>
+  {% for line in needs %}
+    <div class="row"><span>{{ line.material }}</span><b>已领 {{ line.issued_qty }} / 需要 {{ line.need_qty }}</b></div>
+  {% empty %}
+    <div>还没有用料。在后台按清单展开，或直接添加。</div>
+  {% endfor %}
+  <div class="row"><span>材料成本</span><b>{{ order.material_cost }}</b></div>
+  <div class="row"><span>工时成本</span><b>{{ order.labor_cost }}</b></div>
+  {% if needs %}
+  <form method="post" class="noprint">{% csrf_token %}
+    <input type="hidden" name="action" value="issue">
+    <button type="submit">按库存领料</button>
+  </form>
+  {% endif %}
+  {% if order.status == 'done' and not order.stocked_at %}
+  <form method="post" class="noprint">{% csrf_token %}
+    <input type="hidden" name="action" value="stock">
+    <button type="submit">合格品入库</button>
+  </form>
+  {% endif %}
+</div>
+<div class="card">
   <h2>工序</h2>
   {% for op in operations %}
     <div class="row">

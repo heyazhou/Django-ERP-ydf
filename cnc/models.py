@@ -285,6 +285,9 @@ class WorkOrder(Tracked):
     status = models.CharField('状态', max_length=12, choices=WO_STATUS, default='draft')
     released_at = models.DateTimeField('下达时间', blank=True, null=True)
     finished_at = models.DateTimeField('完工时间', blank=True, null=True)
+    stocked_at = models.DateTimeField('完工入库时间', blank=True, null=True)
+    material_cost = models.DecimalField('材料成本', max_digits=14, decimal_places=2, default=Decimal('0'))
+    labor_cost = models.DecimalField('工时成本', max_digits=14, decimal_places=2, default=Decimal('0'))
 
     class Meta:
         verbose_name = '生产工单'
@@ -334,6 +337,8 @@ class WorkOrder(Tracked):
         self.status = 'released'
         self.released_at = now
         self.save(update_fields=['status', 'released_at', 'modification'])
+        from cnc.erpmes import expand_materials
+        expand_materials(self)
         self.refresh_status()
         from cnc.qrutil import log_event
         log_event(self.qr_token, 'release', '下达工单 %s' % self.code, user)
@@ -344,13 +349,36 @@ class WorkOrder(Tracked):
             return
         if all(item.status == 'done' for item in ops):
             self.status = 'done'
-            self.finished_at = timezone.now()
+            if not self.finished_at:
+                self.finished_at = timezone.now()
             self.save(update_fields=['status', 'finished_at', 'modification'])
             return
         if any(item.status in ('running', 'out', 'done') for item in ops):
             if self.status not in ('running', 'closed', 'cancelled'):
                 self.status = 'running'
                 self.save(update_fields=['status', 'modification'])
+
+
+class WorkMaterial(models.Model):
+    """生产工单要消耗的原材料或零件。"""
+
+    work_order = models.ForeignKey(WorkOrder, verbose_name='工单', related_name='materials', on_delete=models.CASCADE)
+    material = models.ForeignKey(
+        'basedata.Material', verbose_name='物料', on_delete=models.PROTECT)
+    need_qty = models.DecimalField('需用数量', max_digits=12, decimal_places=3, default=Decimal('0'))
+    issued_qty = models.DecimalField('已领数量', max_digits=12, decimal_places=3, default=Decimal('0'))
+    note = models.CharField('说明', max_length=120, blank=True, default='')
+
+    class Meta:
+        verbose_name = '工单用料'
+        verbose_name_plural = '工单用料'
+        unique_together = (('work_order', 'material'),)
+
+    def __str__(self):
+        return '%s %s' % (self.material, self.need_qty)
+
+    def left_qty(self):
+        return (self.need_qty or Decimal('0')) - (self.issued_qty or Decimal('0'))
 
 
 class WorkOperation(Tracked):

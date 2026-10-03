@@ -77,7 +77,7 @@ class InitialInventory(generic.BO):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         """"""
-        super(InitialInventory, self).save(force_insert, force_update, using, update_fields)
+        super(InitialInventory, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
         count = InitItem.objects.filter(master=self).count()
         # 如果有附件并且item为零，自动从附件加载明细行
@@ -393,7 +393,7 @@ class WareReturn(generic.BO):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        super(WareReturn, self).save(force_insert, force_update, using, update_fields)
+        super(WareReturn, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         item_count = ReturnItem.objects.filter(master=self).count()
         if self.out and item_count == 0:
             for out_item in OutItem.objects.filter(master=self.out):
@@ -601,7 +601,7 @@ class OutItem(InOutDetail):
             self.measure = self.inventory.measure
             self.warehouse = self.inventory.warehouse
 
-        super(OutItem, self).save(force_insert, force_update, using, update_fields)
+        super(OutItem, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta:
         verbose_name = _("out item")
@@ -643,7 +643,7 @@ class AdjustItem(InOutDetail):
             self.material = self.inventory.material
             self.measure = self.inventory.measure
             self.warehouse = self.inventory.warehouse
-        super(AdjustItem, self).save(force_insert, force_update, using, update_fields)
+        super(AdjustItem, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta:
         verbose_name = _("adjust item")

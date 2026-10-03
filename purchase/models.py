@@ -73,7 +73,7 @@ class PurchaseOrder(generic.BO):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        super(PurchaseOrder, self).save(force_insert, force_update, using, update_fields)
+        super(PurchaseOrder, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
         # 如果折扣金额大于0，按比例会分摊到每一个物料上，并自动计算明细物料中的折旧单价
         # 如果使用SQL语句，因为sqlite3的update语句不支持别名，所以会报错
@@ -196,7 +196,7 @@ class POItem(models.Model):
         else:
             self.left_cnt = total
 
-        super(POItem, self).save(force_insert, force_update, using, update_fields)
+        super(POItem, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
         # 把采购单明细行的价格配给物料模型的采购价格
         self.material.purchase_price = self.price
@@ -248,7 +248,7 @@ class Invoice(generic.BO):
         if self.po:
             self.partner = self.po.partner
             self.po_amount = self.po.amount
-        super(Invoice, self).save(force_insert, force_update, using, update_fields)
+        super(Invoice, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta:
         verbose_name = _("Invoice")
@@ -286,7 +286,7 @@ class Payment(generic.BO):
         if self.po:
             self.partner = self.po.partner
             self.po_amount = self.po.amount
-        super(Payment, self).save(force_insert, force_update, using, update_fields)
+        super(Payment, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     def __unicode__(self):
         return '%s %s' % (self.code or '', self.partner or '')

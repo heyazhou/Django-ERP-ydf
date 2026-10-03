@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib import messages
+from cnc.erpmes import orders_from_sale
 from common import generic
 from sale.models import SaleOrder, SaleItem, PaymentCollection, OfferSheet, OfferItem
 from basedata.models import Measure, BankAccount
@@ -32,6 +34,7 @@ class OfferItemInline(admin.TabularInline):
 
 
 class SaleOrderAdmin(generic.BOAdmin):
+    actions = ['make_production', 'export_selected_data']
     CODE_NUMBER_WIDTH = 5
     CODE_PREFIX = 'SO'
     inlines = [SaleItemInline]
@@ -44,6 +47,17 @@ class SaleOrderAdmin(generic.BOAdmin):
     )
     readonly_fields = ['amount', 'status']
     date_hierarchy = 'begin'
+
+    def make_production(self, request, queryset):
+        total = 0
+        for sale_order in queryset:
+            try:
+                total += len(orders_from_sale(sale_order, request.user))
+            except ValueError as exc:
+                self.message_user(request, '%s：%s' % (sale_order, exc), level=messages.ERROR)
+        if total:
+            self.message_user(request, '已生成 %s 张生产任务' % total)
+    make_production.short_description = '按订单生成生产任务'
 
     def save_model(self, request, obj, form, change):
         if obj:

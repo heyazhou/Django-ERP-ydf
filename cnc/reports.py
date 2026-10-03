@@ -104,7 +104,7 @@ def quality_rows():
 def operator_rows():
     start = _month_start()
     grouped = JobLog.objects.filter(created__gte=start, user__isnull=False).values(
-        'user__username', 'user__first_name'
+        'user__username', 'user__first_name', 'user__last_name'
     ).annotate(
         good=Coalesce(Sum('good_qty'), Decimal('0')),
         scrap=Coalesce(Sum('scrap_qty'), Decimal('0')),
@@ -112,7 +112,7 @@ def operator_rows():
     ).order_by('-good')
     rows = []
     for item in grouped:
-        name = item['user__first_name'] or item['user__username']
+        name = '%s%s' % (item['user__last_name'] or '', item['user__first_name'] or '') or item['user__username']
         rows.append({
             'name': name,
             'good': item['good'],

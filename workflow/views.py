@@ -148,13 +148,8 @@ def start(request, app, model, object_id):
         TodoList.objects.create(inst=workflow_inst, user=request.user, app_name=app, model_name=model, is_read=True,
                                 read_time=datetime.datetime.now(), status=True)
 
-        # 设置工作流中那个模型的状态
-        if next_node.status_field and next_node.status_value:
-            try:
-                setattr(obj, next_node.status_field, next_node.status_value)
-                obj.save()
-            except Exception:
-                pass
+        from workflow.phoneflow import apply_document_status
+        apply_document_status(obj, next_node)
         messages.success(request, _('workflow started successfully'))
         return HttpResponseRedirect("/admin/%s/%s/%s/change/" % (app, model, object_id))
 
@@ -254,7 +249,7 @@ def approve(request, app, model, object_id, operation):
     if request.POST.get("post"):
         from django.db import transaction
         val = request.POST.getlist(SELECTED_CHECKBOX_NAME)
-        memo = request.POST['memo']
+        memo = request.POST.get('memo') or ''
         with transaction.atomic():
             try:
                 if delete_instance:
@@ -271,12 +266,8 @@ def approve(request, app, model, object_id, operation):
                     else:
                         workflow_instance.current_nodes.clear()
                         workflow_instance.current_nodes.add(next_nodes[0])
-                        if current_tmp.status_field and current_tmp.status_value:
-                            try:
-                                setattr(obj, current_tmp.status_field, current_tmp.status_value)
-                                obj.save()
-                            except Exception:
-                                pass
+                        from workflow.phoneflow import apply_document_status
+                        apply_document_status(obj, current_tmp)
                     # 创建历史纪录
                     History.objects.create(
                         inst=workflow_instance,

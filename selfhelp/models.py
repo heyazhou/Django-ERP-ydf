@@ -16,6 +16,13 @@ from basedata.models import Material, ExtraParam, Project, ExpenseAccount, Measu
 from organ.models import OrgUnit
 
 
+def _user_name(user):
+    if user is None:
+        return ''
+    name = '%s%s' % (user.last_name or '', user.first_name or '')
+    return name or user.username
+
+
 class WorkOrder(generic.BO):
     """
     工单
@@ -64,7 +71,7 @@ class WorkOrder(generic.BO):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        super(WorkOrder, self).save(force_insert, force_update, using, update_fields)
+        super(WorkOrder, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
         # 获取物料的额外参数
         if self.service:
@@ -189,13 +196,12 @@ class Loan(generic.BO):
 
     def __unicode__(self):
         import decimal
-        left = self.loan_amount
-        left -= self.logout_amount or decimal.Decimal(0.00)
-        name = '%s%s' % (self.user.last_name, self.user.first_name)
-        return '%s %s %s 借:%.2f 已还:%.2f' % (self.code or '', name, self.title or '', self.loan_amount, left)
+        amount = self.loan_amount or decimal.Decimal(0)
+        left = amount - (self.logout_amount or decimal.Decimal(0))
+        return '%s %s %s 借:%.2f 已还:%.2f' % (self.code or '', self.applier(), self.title or '', amount, left)
 
     def applier(self):
-        return u'%s%s' % (self.user.last_name, self.user.first_name)
+        return _user_name(self.user)
 
     applier.short_description = _('applier')
 
@@ -256,7 +262,7 @@ class Reimbursement(generic.BO):
     pay_user = models.CharField(_('pay user'), max_length=const.DB_CHAR_NAME_40, blank=True, null=True)
 
     def applier(self):
-        return u'%s%s' % (self.user.last_name, self.user.first_name)
+        return _user_name(self.user)
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
@@ -269,7 +275,7 @@ class Reimbursement(generic.BO):
         self.pay_amount = self.amount
         if self.logout_amount and self.pay_amount is not None:
             self.pay_amount -= self.logout_amount
-        super(Reimbursement, self).save(force_insert, force_update, using, update_fields)
+        super(Reimbursement, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     def action_pay(self, request):
         """支付操作"""
@@ -328,7 +334,7 @@ class ReimbursementItem(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        super(ReimbursementItem, self).save(force_insert, force_update, using, update_fields)
+        super(ReimbursementItem, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         sql = 'UPDATE selfhelp_reimbursement SET amount = (SELECT SUM(amount) FROM selfhelp_reimbursementitem WHERE reimbursement_id = %s) WHERE id = %s'
         params = [self.reimbursement.id, self.reimbursement.id]
         generic.update(sql, params)

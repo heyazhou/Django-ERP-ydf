@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.utils.html import format_html
 
 from common import generic
+from cnc import erpmes
 from cnc import models
 
 
@@ -25,6 +26,12 @@ class RoutingStepInline(admin.TabularInline):
     model = models.RoutingStep
     extra = 1
 
+
+
+class WorkMaterialInline(admin.TabularInline):
+    model = models.WorkMaterial
+    extra = 0
+    raw_id_fields = ('material',)
 
 class WorkOperationInline(admin.TabularInline):
     model = models.WorkOperation
@@ -88,8 +95,8 @@ class WorkOrderAdmin(CncAdmin):
     list_filter = ('status',)
     search_fields = ('code', 'title', 'drawing_no')
     raw_id_fields = ('material', 'customer', 'sale_order', 'routing')
-    inlines = [WorkOperationInline]
-    actions = ['release_selected', 'export_selected_data']
+    inlines = [WorkOperationInline, WorkMaterialInline]
+    actions = ['release_selected', 'expand_selected', 'issue_selected', 'stock_selected', 'gap_selected', 'export_selected_data']
 
     def progress(self, obj):
         return obj.progress_text()
@@ -98,6 +105,51 @@ class WorkOrderAdmin(CncAdmin):
     def late_flag(self, obj):
         return '延期' if obj.is_late() else ''
     late_flag.short_description = '交期'
+
+
+    def expand_selected(self, request, queryset):
+        count = 0
+        for order in queryset:
+            count += erpmes.expand_materials(order)
+        self.message_user(request, '已按清单展开 %s 行用料' % count)
+
+    expand_selected.short_description = '按清单展开用料'
+
+    def issue_selected(self, request, queryset):
+        ok = 0
+        for order in queryset:
+            try:
+                erpmes.issue_materials(order, request.user)
+                ok += 1
+            except ValueError as exc:
+                self.message_user(request, '%s：%s' % (order, exc), level=messages.ERROR)
+        if ok:
+            self.message_user(request, '已领料 %s 张工单' % ok)
+
+    issue_selected.short_description = '按库存领料并过账'
+
+    def stock_selected(self, request, queryset):
+        ok = 0
+        for order in queryset:
+            try:
+                erpmes.receive_finished(order, request.user)
+                ok += 1
+            except ValueError as exc:
+                self.message_user(request, '%s：%s' % (order, exc), level=messages.ERROR)
+        if ok:
+            self.message_user(request, '已完工入库 %s 张工单' % ok)
+
+    stock_selected.short_description = '合格品入库'
+
+    def gap_selected(self, request, queryset):
+        rows = erpmes.shortage_lines(queryset)
+        if not rows:
+            self.message_user(request, '这些工单没有缺料')
+            return
+        text = '；'.join('%s %s 缺%s' % (order.code, line.material, short) for order, line, _onhand, short in rows[:12])
+        self.message_user(request, text, level=messages.WARNING)
+
+    gap_selected.short_description = '查看缺料'
 
     def release_selected(self, request, queryset):
         ok = 0
@@ -358,3 +410,9 @@ class ShopEventAdmin(admin.ModelAdmin):
     list_display = ('created', 'token', 'action', 'summary', 'user')
     search_fields = ('token', 'summary')
     date_hierarchy = 'created'
+
+
+@admin.register(models.WorkMaterial)
+class WorkMaterialAdmin(admin.ModelAdmin):
+    list_display = ('work_order', 'material', 'need_qty', 'issued_qty')
+    raw_id_fields = ('work_order', 'material')

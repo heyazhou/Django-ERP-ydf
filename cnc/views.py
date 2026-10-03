@@ -94,10 +94,20 @@ def open_token(request, token):
 @login_required
 def workorder(request, pk):
     order = get_object_or_404(WorkOrder.objects.select_related('customer', 'material', 'routing'), pk=pk)
-    if request.method == 'POST' and request.POST.get('action') == 'release':
+    if request.method == 'POST':
+        action = request.POST.get('action')
         try:
-            order.release(request.user)
-            messages.success(request, '工单已下达')
+            if action == 'release':
+                order.release(request.user)
+                messages.success(request, '工单已下达')
+            elif action == 'issue':
+                from cnc.erpmes import issue_materials
+                issue_materials(order, request.user)
+                messages.success(request, '已按库存领料')
+            elif action == 'stock':
+                from cnc.erpmes import receive_finished
+                receive_finished(order, request.user)
+                messages.success(request, '合格品已入库')
         except ValueError as exc:
             messages.error(request, str(exc))
         return redirect('cnc_workorder', pk=order.pk)
@@ -109,6 +119,7 @@ def workorder(request, pk):
         'checks': order.quality_checks.all()[:8],
         'drawings': order.drawing_set.all()[:8] if hasattr(order, 'drawing_set') else [],
         'events': _events(order.qr_token),
+        'needs': order.materials.select_related('material'),
     })
 
 
@@ -494,7 +505,7 @@ def document(request, token):
         messages.error(request, '没有找到这个二维码')
         return redirect('cnc_home')
     rows = []
-    skip = {'password', 'creator', 'modifier', 'begin', 'end'}
+    skip = {'password', 'creator', 'modifier', 'begin', 'end', 'idcard', 'banknum', 'bankname'}
     for field in obj._meta.fields:
         if field.name in skip or field.primary_key:
             continue

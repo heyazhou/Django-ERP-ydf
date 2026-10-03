@@ -34,7 +34,8 @@ def describe(obj, user):
     return blank
 
 
-def _apply_status(obj, node):
+def apply_document_status(obj, node):
+    """审批只改采购、销售等单据状态。车间、库存、质量和导入仍走各自的执行按钮。"""
     if obj._meta.app_label in SKIP_STATUS:
         return
     if obj._meta.model_name == 'dataimport':
@@ -69,7 +70,7 @@ def start_flow(request, obj):
         inst=inst, user=request.user, app_name=obj._meta.app_label, model_name=obj._meta.model_name,
         is_read=True, read_time=datetime.datetime.now(), status=True)
     deliver(inst, node, kind='arrive')
-    _apply_status(obj, node)
+    apply_document_status(obj, node)
     return '\u5df2\u63d0\u4ea4\uff0c\u4e0b\u4e00\u73af\u8282\u4f1a\u6536\u5230\u4fe1\u606f'
 
 
@@ -124,7 +125,7 @@ def decide_flow(request, obj, operation, memo):
             return '\u6d41\u7a0b\u6ca1\u6709\u4e0b\u4e00\u73af\u8282'
         inst.current_nodes.clear()
         inst.current_nodes.add(next_node)
-        _apply_status(obj, current_node)
+        apply_document_status(obj, current_node)
         extra = request.POST.getlist('receiver')
         deliver(inst, next_node, kind='arrive', extra_ids=extra)
     History.objects.create(

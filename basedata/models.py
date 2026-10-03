@@ -52,7 +52,7 @@ class ValueList(generic.BO):
     lock_time = models.DateTimeField(_("locked time"), null=True, blank=True)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super(ValueList, self).save(force_insert, force_update, using, update_fields)
+        super(ValueList, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         # 同时更新 ValueListItem 模型数据的 group_code 数值
         sql = 'update basedata_valuelistitem set group_code = %s where group_id=%s'
         params = [self.code, self.id]
@@ -95,7 +95,7 @@ class ValueListItem(ToStringMixin, models.Model):
             cnt = self.group.valuelistitem_set.count() + 1
             self.code = "%02d" % cnt
         self.group_code = self.group.code
-        super(ValueListItem, self).save(force_insert, force_update, using, update_fields)
+        super(ValueListItem, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     def __unicode__(self):
         return '%s-%s' % (self.code or '', self.name or '')

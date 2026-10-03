@@ -74,7 +74,7 @@ class SaleOrder(generic.BO):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        super(SaleOrder, self).save(force_insert, force_update, using, update_fields)
+        super(SaleOrder, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         if self.discount_amount > 0:
             sql = 'UPDATE sale_saleitem a SET a.discount_price = a.sale_price - ' \
                   '((SELECT discount_amount/amount FROM sale_saleorder WHERE id = %s) * (a.sale_price*a.cnt)/a.cnt) WHERE a.master_id = %s'
@@ -121,7 +121,7 @@ class SaleItem(models.Model):
         if self.material and (self.material.sale_price or self.material.stock_price):
             self.sale_price = self.material.sale_price or self.material.stock_price * \
                 decimal.Decimal(1.17) / decimal.Decimal(0.6)
-        super(SaleItem, self).save(force_insert, force_update, using, update_fields)
+        super(SaleItem, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         sql = 'update sale_saleorder set amount = (select sum(sale_price*cnt) from sale_saleitem where master_id=%s) where id=%s'
         params = [self.master.id, self.master.id]
         # print sql % (self.master.id,self.master.id)
@@ -167,7 +167,7 @@ class PaymentCollection(generic.BO):
             self.order_amount = self.so.amount
             if self.so.discount_amount > 0:
                 self.order_amount -= self.so.discount_amount
-        super(PaymentCollection, self).save(force_insert, force_update, using, update_fields)
+        super(PaymentCollection, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta:
         verbose_name = _('Payment Collection')
@@ -230,7 +230,7 @@ class OfferSheet(generic.BO):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         import decimal
-        super(OfferSheet, self).save(force_insert, force_update, using, update_fields)
+        super(OfferSheet, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         if self.discount_amount > 0:
             sql = 'UPDATE sale_offeritem a SET a.discount_price = a.sale_price - ' \
                   '((SELECT discount_amount/amount FROM sale_offersheet WHERE id = %s) * (a.sale_price*a.cnt)/a.cnt) WHERE a.master_id = %s'
@@ -331,7 +331,7 @@ class OfferItem(models.Model):
         if self.material and (self.material.sale_price or self.material.stock_price):
             self.sale_price = self.material.sale_price or self.material.stock_price * \
                 decimal.Decimal(1.17) / decimal.Decimal(0.6)
-        super(OfferItem, self).save(force_insert, force_update, using, update_fields)
+        super(OfferItem, self).save(force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         sql = 'update sale_offersheet set amount = (select sum(sale_price*cnt) from sale_offeritem where master_id=%s) where id=%s'
         params = [self.master.id, self.master.id]
         # print sql % (self.master.id,self.master.id)
