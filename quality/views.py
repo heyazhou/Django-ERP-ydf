@@ -1,5 +1,6 @@
 # coding=utf-8
 from django.contrib import messages
+from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -15,7 +16,9 @@ def _events(token):
 
 @login_required
 def open_list(request):
-    records = CheckRecord.objects.filter(status='open').select_related('work_order', 'operation')[:30]
+    records = CheckRecord.objects.filter(status='open').filter(
+        Q(inspector=request.user) | Q(operation__operator=request.user)
+    ).select_related('work_order', 'operation')[:30]
     return render(request, 'quality/mobile/open.html', {'records': records})
 
 

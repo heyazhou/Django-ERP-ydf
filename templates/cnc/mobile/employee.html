@@ -4,7 +4,7 @@
 <div class="card qr">
   <h2 style="text-align:left;">{{ item.code|default:item.qr_token }} {{ item.name }}</h2>
   <img src="{% url 'cnc_qr' item.qr_token %}" alt="职员二维码">
-  <div>工牌二维码和人脸照片在后台「基础数据」的职员里录入。拍照识别这张码或这张脸，都会打开此页。</div>
+  <div>拍照识别这张码或这张脸，都会打开此页。下面可以补充电话和人脸。</div>
 </div>
 {% if item.photo %}<div class="card"><img src="{{ item.photo.url }}" alt="职员照片" style="width:100%;border-radius:12px;"></div>{% endif %}
 <div class="card">
@@ -12,6 +12,15 @@
   <div class="row"><span>电话</span><b>{{ item.phone|default:"-" }}</b></div>
   <div class="row"><span>登录账号</span><b>{{ item.user|default:"未关联" }}</b></div>
   <div class="row"><span>已录入人脸</span><b>{{ faces }} 张</b></div>
+</div>
+<div class="card noprint">
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <label>电话</label>
+    <input name="phone" value="{{ item.phone|default:'' }}">
+    <label>再拍一张正脸</label>
+    <input type="file" name="photo" accept="image/*" capture="user">
+    <button type="submit">保存并训练</button>
+  </form>
 </div>
 <div class="card">
   <h2>当前任务</h2>

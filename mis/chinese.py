@@ -88,7 +88,8 @@ def apply_chinese_labels():
                 continue
             field.verbose_name = _localize(field.verbose_name)
             choices = getattr(field, 'choices', None)
-            if not choices or callable(choices):
+            # 数据库选项在首次使用时再读取。启动阶段展开会在应用尚未就绪时查库。
+            if not isinstance(choices, (list, tuple)):
                 continue
             updated = []
             changed = False

@@ -30,20 +30,12 @@ def _events(token, limit=8):
 
 @login_required
 def home(request):
-    from quality.models import CheckRecord
-    mine = WorkOperation.objects.filter(
-        operator=request.user, status__in=['ready', 'running']
-    ).select_related('work_order', 'machine')[:12]
-    ready = WorkOperation.objects.filter(status='ready').select_related('work_order')[:12]
-    machines = Machine.objects.all()[:20]
-    return render(request, 'cnc/mobile/home.html', {
-        'mine': mine,
-        'ready': ready,
-        'machines': machines,
-        'running': WorkOrder.objects.filter(status__in=['released', 'running']).count(),
-        'late': sum(1 for order in WorkOrder.objects.exclude(status__in=['done', 'closed', 'cancelled']) if order.is_late()),
-        'checks': CheckRecord.objects.filter(status='open')[:8],
-    })
+    from cnc.identify import owner_of
+    from cnc.mine import owner_feed
+    owner_id, owner_name = owner_of(request.user)
+    feed = owner_feed(request.user)
+    feed.update({'owner_id': owner_id, 'owner_name': owner_name})
+    return render(request, 'cnc/mobile/home.html', feed)
 
 
 @login_required

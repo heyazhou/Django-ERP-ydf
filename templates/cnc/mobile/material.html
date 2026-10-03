@@ -4,7 +4,7 @@
 <div class="card qr">
   <h2 style="text-align:left;">{{ item.code|default:item.qr_token }} {{ item.name }}</h2>
   <img src="{% url 'cnc_qr' item.qr_token %}" alt="物料二维码">
-  <div>物料照片、条码、二维码、二维图纸和三维模型在后台「基础数据」的物料里录入。拍到码或条码后会打开这张物料。</div>
+  <div>拍到二维码或条码后会打开这张物料。照片、条码、图纸和模型可以在下面补充。</div>
 </div>
 {% if item.photo %}<div class="card"><img src="{{ item.photo.url }}" alt="物料照片" style="width:100%;border-radius:12px;"></div>{% endif %}
 <div class="card">
@@ -12,6 +12,29 @@
   <div class="row"><span>类别</span><b>{{ item.get_supply_kind_display|default:"-" }}</b></div>
   <div class="row"><span>条码</span><b>{{ item.barcode|default:"-" }}</b></div>
   <div class="row"><span>仓库</span><b>{{ item.warehouse|default:"-" }}</b></div>
+</div>
+<div class="card noprint">
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <label>条码</label>
+    <input name="barcode" value="{{ item.barcode|default:'' }}">
+    <label>类别</label>
+    <select name="supply_kind">
+      <option value=""{% if not item.supply_kind %} selected{% endif %}>未分类</option>
+      <option value="raw"{% if item.supply_kind == 'raw' %} selected{% endif %}>原材料</option>
+      <option value="hardware"{% if item.supply_kind == 'hardware' %} selected{% endif %}>五金</option>
+      <option value="cutter"{% if item.supply_kind == 'cutter' %} selected{% endif %}>刀具</option>
+      <option value="tool"{% if item.supply_kind == 'tool' %} selected{% endif %}>工具</option>
+      <option value="aux"{% if item.supply_kind == 'aux' %} selected{% endif %}>辅料</option>
+      <option value="part"{% if item.supply_kind == 'part' %} selected{% endif %}>加工件</option>
+    </select>
+    <label>物料照片</label>
+    <input type="file" name="photo" accept="image/*" capture="environment">
+    <label>二维图纸</label>
+    <input type="file" name="drawing_file">
+    <label>三维模型</label>
+    <input type="file" name="model_file">
+    <button type="submit">保存并传输</button>
+  </form>
 </div>
 <div class="card">
   <h2>批次</h2>
@@ -28,7 +51,7 @@
   {% for drawing in drawings %}
     <div class="row"><a href="{% url 'cnc_drawing' drawing.pk %}">{{ drawing }}</a></div>
   {% empty %}
-    {% if not item.drawing_file and not item.model_file %}<div>还没有图纸。请在后台基础数据的物料里上传。</div>{% endif %}
+    {% if not item.drawing_file and not item.model_file %}<div>还没有图纸。可在下面上传二维图纸或三维模型。</div>{% endif %}
   {% endfor %}
 </div>
 {% endblock %}

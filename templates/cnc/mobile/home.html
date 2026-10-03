@@ -1,35 +1,43 @@
 {% extends "cnc/mobile/base.html" %}
-{% block title %}车间首页{% endblock %}
+{% block title %}手机{% endblock %}
 {% block content %}
-<div class="grid">
-  <a class="card" href="{% url 'cnc_board' %}"><h2>区域看板</h2><div>各区域待开工和在制</div></a>
-  <a class="card" href="{% url 'cnc_scan' %}"><h2>扫二维码</h2><div>开工、报工、质检、发料</div></a>
-  <a class="card" href="{% url 'cnc_identify' %}"><h2>拍照识别</h2><div>人脸、物料、夹具、设备、图纸</div></a>
-  <a class="card" href="{% url 'quality_open' %}"><h2>质量管理</h2><div>待检 {{ checks|length }}</div></a>
-  <a class="card" href="{% url 'cnc_reports' %}"><h2>生产报表</h2><div>在制 {{ running }} · 延期 {{ late }}</div></a>
+<div class="card">
+  <div class="row"><span>机主</span><b>{{ owner_id }} {{ owner_name }}</b></div>
 </div>
 <div class="card">
-  <h2>我的在制工序</h2>
-  {% for op in mine %}
-    <div class="row"><a href="{% url 'cnc_operation' op.pk %}">{{ op.work_order.code }} {{ op.name }}</a><span class="pill">{{ op.get_status_display }}</span></div>
-  {% empty %}
-    <div>当前没有派给你的工序。扫工单或工序码即可开工。</div>
+  <h2>接收信息</h2>
+  {% for job in jobs %}
+    <div class="row"><a href="{% url 'cnc_operation' job.pk %}">{{ job.work_order.code }} {{ job.name }}</a><span>{{ job.get_status_display }}</span></div>
   {% endfor %}
-</div>
-<div class="card">
-  <h2>可开工</h2>
-  {% for op in ready %}
-    <div class="row"><a href="{% url 'cnc_operation' op.pk %}">{{ op.work_order.title }} / {{ op.name }}</a><span>{{ op.plan_qty }}</span></div>
-  {% empty %}
-    <div>没有待开工工序。</div>
+  {% for item in fixes %}
+    <div class="row"><a href="{% url 'cnc_maintain' item.pk %}">{{ item.title }}</a><span>{{ item.get_status_display }}</span></div>
   {% endfor %}
-</div>
-<div class="card">
-  <h2>设备</h2>
-  {% for machine in machines %}
-    <div class="row"><a href="{% url 'cnc_machine' machine.pk %}">{{ machine.code }} {{ machine.name }}</a><span>{{ machine.get_status_display }}</span></div>
-  {% empty %}
-    <div>还没有设备。请先在后台登记机床，每台机床都会生成二维码。</div>
+  {% for item in units %}
+    <div class="row"><a href="{% url 'cnc_assembly_unit' item.pk %}">{{ item }}</a><span>{{ item.get_status_display }}</span></div>
   {% endfor %}
+  {% for item in hands %}
+    <div class="row"><a href="{% url 'cnc_open' item.token %}">{{ item.body|default:item.place }}</a><span>{{ item.sender }}</span></div>
+  {% endfor %}
+  {% for item in notices %}
+    <div class="row">{{ item.href }}</div>
+  {% endfor %}
+  {% if empty %}
+    <div>没有交给机主的信息。</div>
+  {% endif %}
 </div>
+<form method="post" action="{% url 'cnc_identify' %}" enctype="multipart/form-data">{% csrf_token %}
+  <div class="card">
+    <h2>输入数据</h2>
+    <label>地点</label>
+    <input name="place" placeholder="仓库、工位或外协厂">
+    <label>数量</label>
+    <input name="qty" inputmode="decimal">
+    <label>内容</label>
+    <input name="body" placeholder="这一步要记下的数据">
+    <button class="secondary" type="submit">保存数据</button>
+  </div>
+  <label class="shoot">拍照
+    <input type="file" name="image" accept="image/*" capture="environment" onchange="this.form.requestSubmit()">
+  </label>
+</form>
 {% endblock %}

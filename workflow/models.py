@@ -236,6 +236,22 @@ class History(ToStringMixin, models.Model):
         ordering = ['inst', 'pro_time']
 
 
+
+def _phone_href(app_name, model_name, object_id, label):
+    from django.apps import apps
+    from cnc.qrutil import ensure_token
+    obj = None
+    try:
+        model = apps.get_model(app_name, model_name)
+        obj = model.objects.filter(pk=object_id).first()
+    except Exception:
+        obj = None
+    if obj is None:
+        return format_html('<a href="/admin/{}/{}/{}/change/">{}</a>', app_name, model_name, object_id, label)
+    token = ensure_token(obj)
+    return format_html('<a href="/m/q/{}/">{}</a>', token, label)
+
+
 class TodoList(ToStringMixin, models.Model):
     """待办列表
 
@@ -280,8 +296,7 @@ class TodoList(ToStringMixin, models.Model):
 
     def code_link(self):
         """跳转到对应的工单"""
-        return format_html("<a href='/admin/{}/{}/{}/change/'>{}</a>",
-                           self.app_name, self.model_name, self.inst.object_id, self.code)
+        return _phone_href(self.app_name, self.model_name, self.inst.object_id, self.code)
     code_link.allow_tags = True
     code_link.short_description = _("code")
 
@@ -291,8 +306,7 @@ class TodoList(ToStringMixin, models.Model):
         ct = ContentType.objects.get(app_label=self.app_name, model=self.model_name)
         obj = ct.get_object_for_this_type(id=self.inst.object_id)
         title = u"%s" % obj
-        return format_html(u"<a href='/admin/{}/{}/{}/change/'>{}</a>",
-                           self.app_name, self.model_name, self.inst.object_id, title)
+        return _phone_href(self.app_name, self.model_name, self.inst.object_id, title)
 
     def modal_dsc(self):
         """显示工作流的名称"""
@@ -348,9 +362,7 @@ class Notice(ToStringMixin, models.Model):
         return self.title
 
     def href(self):
-        return format_html(
-            '<a href="/admin/{}/{}/{}/change/">{}</a>',
-            self.inst.modal.app_name, self.inst.modal.model_name, self.inst.object_id, self.title)
+        return _phone_href(self.inst.modal.app_name, self.inst.modal.model_name, self.inst.object_id, self.title)
     href.short_description = '内容'
 
 

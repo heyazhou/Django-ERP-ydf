@@ -1,0 +1,40 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}物流跟踪{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>物流跟踪</h2>
+  <p style="color:#667;font-size:14px;">手机登记的交接，以及仍在流转中的批次和外协。</p>
+</div>
+<div class="card">
+  <h2>交接记录</h2>
+  {% for item in hands %}
+    <div class="row"><a href="{% url 'cnc_open' item.token %}">{{ item.place|default:"未填地点" }} {{ item.qty }} {{ item.body }}</a><span>{{ item.sender }}</span></div>
+  {% empty %}
+    <div>还没有物流交接。扫单据后在页面下方登记。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>在制批次</h2>
+  {% for lot in lots %}
+    <div class="row"><a href="{% url 'cnc_lot' lot.pk %}">{{ lot.code }} {{ lot.material }}</a><span>{{ lot.get_status_display }}</span></div>
+  {% empty %}
+    <div>没有已发料或在制的批次。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>外协在途</h2>
+  {% for item in outside %}
+    <div class="row"><a href="{% url 'cnc_outsource' item.pk %}">{{ item.code }} {{ item.vendor|default:"" }}</a><span>{{ item.qty }}</span></div>
+  {% empty %}
+    <div>没有已发出未回厂的外协。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>最近动作</h2>
+  {% for event in events %}
+    <div class="row"><a href="{% url 'cnc_open' event.token %}">{{ event.summary }}</a><span>{{ event.user|default:"" }}</span></div>
+  {% empty %}
+    <div>还没有流转动作。</div>
+  {% endfor %}
+</div>
+{% endblock %}

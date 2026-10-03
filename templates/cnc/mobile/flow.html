@@ -1,0 +1,33 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}流转{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>信息流</h2>
+  <p style="color:#667;font-size:14px;">打开一条就进入该单据，在手机上办理并继续传递。</p>
+  <a class="secondary" href="{% url 'cnc_flow_move' %}">查看物流跟踪</a>
+</div>
+<div class="card">
+  <h2>交给我的</h2>
+  {% for item in hands %}
+    <div class="row"><a href="{% url 'cnc_open' item.token %}">{{ item.get_kind_label }} {{ item.body|default:item.place }}</a><span>{{ item.sender }}</span></div>
+  {% empty %}
+    <div>没有新的交接。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>流程推送</h2>
+  {% for item in notices %}
+    <div class="row">{{ item.href|safe }}<span>{{ item.get_kind_display }}</span></div>
+  {% empty %}
+    <div>没有未读推送。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>待办</h2>
+  {% for item in todos %}
+    <div class="row">{{ item.href|safe }}<span>{{ item.node_dsc }}</span></div>
+  {% empty %}
+    <div>没有待办。</div>
+  {% endfor %}
+</div>
+{% endblock %}

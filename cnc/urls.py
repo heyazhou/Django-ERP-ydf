@@ -1,12 +1,18 @@
 from django.urls import path
 
-from cnc import identify, views
+from cnc import flowviews, identify, intake, views
 from quality import views as quality_views
 
 urlpatterns = [
     path('', views.home, name='cnc_home'),
     path('scan/', views.scan, name='cnc_scan'),
     path('ai/', identify.identify, name='cnc_identify'),
+    path('entry/', intake.entry_home, name='cnc_entry'),
+    path('entry/<str:kind>/', intake.entry_form, name='cnc_entry_kind'),
+    path('flow/', flowviews.flow_home, name='cnc_flow'),
+    path('flow/move/', flowviews.flow_moves, name='cnc_flow_move'),
+    path('flow/send/', flowviews.flow_send, name='cnc_flow_send'),
+    path('flow/decide/', flowviews.flow_decide, name='cnc_flow_decide'),
     path('emp/<int:pk>/', identify.employee_page, name='cnc_employee'),
     path('mat/<int:pk>/', identify.material_page, name='cnc_material'),
     path('q/<str:token>/', views.open_token, name='cnc_open'),

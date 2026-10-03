@@ -39,7 +39,7 @@
     <div class="row"><a href="{% url 'cnc_drawing' drawing.pk %}">{{ drawing.drawing_no|default:drawing.code }} {{ drawing.name }}</a></div>
   {% endfor %}
   {% if not order.material.drawing_file and not order.material.model_file and not drawings %}
-    <div>二维图纸和三维模型在后台「基础数据」的物料里录入。</div>
+    <div>还没有图纸。<a href="{% url 'cnc_material' order.material.pk %}">到物料页用手机上传</a></div>
   {% endif %}
 </div>
 <div class="card">

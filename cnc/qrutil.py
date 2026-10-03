@@ -107,8 +107,8 @@ def find_by_token(token):
 def log_event(token, action, summary, user):
     from cnc.models import ShopEvent
     ShopEvent.objects.create(
-        token=token or '',
-        action=action,
-        summary=summary[:200],
+        token=(token or '')[:32],
+        action=(action or '')[:20],
+        summary=(summary or '')[:200],
         user=user if getattr(user, 'is_authenticated', False) else None,
     )

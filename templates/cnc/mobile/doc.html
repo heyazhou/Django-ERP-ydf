@@ -10,9 +10,7 @@
   {% for label, value in rows %}
     <div class="row"><span>{{ label }}</span><b>{{ value }}</b></div>
   {% endfor %}
-  {% if admin_url %}
-    <a class="btn secondary" href="{{ admin_url }}">打开后台单据</a>
-  {% endif %}
+  <div>扫到这张单后，在下面登记物流、补录数据，或把信息交给下一个人。审批也在手机上办理。</div>
 </div>
 {% include "cnc/mobile/_events.html" %}
 {% endblock %}

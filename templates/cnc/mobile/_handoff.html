@@ -1,0 +1,23 @@
+{% if flow.can_start or flow.can_decide %}
+<div class="card noprint">
+  <h2>办理</h2>
+  {% if flow.node %}<div class="row"><span>当前环节</span><b>{{ flow.node }}</b></div>{% endif %}
+  {% if flow.can_start %}
+  <form method="post" action="{% url 'cnc_flow_decide' %}">{% csrf_token %}
+    <input type="hidden" name="token" value="{{ flow.token }}">
+    <input type="hidden" name="operation" value="start">
+    <button type="submit">提交并通知下一环节</button>
+  </form>
+  {% endif %}
+  {% if flow.can_decide %}
+  <form method="post" action="{% url 'cnc_flow_decide' %}">{% csrf_token %}
+    <input type="hidden" name="token" value="{{ flow.token }}">
+    <label>办理意见</label>
+    <input name="memo">
+    <button name="operation" value="1" type="submit">同意并传递</button>
+    <button class="warn" name="operation" value="3" type="submit">退回</button>
+    <button class="danger" name="operation" value="4" type="submit">终止</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}

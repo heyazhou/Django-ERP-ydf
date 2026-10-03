@@ -14,6 +14,14 @@
 {% endif %}
 {% block extrahead %}{% endblock %}
 {% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
+<style>
+#logout-form { display: inline; }
+#logout-form button {
+  background: none; border: 0; padding: 0; margin: 0;
+  color: #fff; font: inherit; cursor: pointer;
+}
+#logout-form button:hover { text-decoration: underline; }
+</style>
 </head>
 {% load i18n %}
 
@@ -49,7 +57,9 @@
                 {% if user.has_usable_password %}
                 <a href="{% url 'admin:password_change' %}">{% trans 'Change password' %}</a> /
                 {% endif %}
-                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+                <form id="logout-form" method="post" action="{% url 'admin:logout' %}">{% csrf_token %}
+                    <button type="submit">{% trans 'Log out' %}</button>
+                </form>
             {% endblock %}
         </div>
         {% endif %}

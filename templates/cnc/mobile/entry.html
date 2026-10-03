@@ -1,0 +1,16 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}手机录入{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>手机录入</h2>
+  <p style="color:#667;font-size:14px;">用手机拍照并填写相关数据。保存后生成二维码，并进入对应的管理页面。</p>
+</div>
+<div class="grid">
+  {% for key, label, note in kinds %}
+  <a class="card" href="{% url 'cnc_entry_kind' key %}">
+    <h2>{{ label }}</h2>
+    <div>{{ note }}</div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

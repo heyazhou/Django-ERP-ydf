@@ -18,12 +18,6 @@ Forked from <a href="https://github.com/zhuinfo/Django-ERP">zhuinfo Django-ERP</
 - Django 6.1.1 及其他依赖见 `requirements.txt`
 - MySQL 8.4.11：`.mysql\mysql-8.4.11-winx64`，端口 `3307`，只监听本机。系统里原来的 MySQL 5.7 没有改动。
 
-启动项目数据库：
-
-```
-.mysql\mysql-8.4.11-winx64\bin\mysqld.exe --defaults-file=.mysql\my.ini --console
-```
-
 安装或更新依赖：
 
 ```
@@ -31,11 +25,13 @@ Forked from <a href="https://github.com/zhuinfo/Django-ERP">zhuinfo Django-ERP</
 .venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-启动：
+启动数据库和网站（使用项目自带的 Python 和 MySQL）：
 
 ```
-.venv\Scripts\python.exe manage.py runserver
+.\start.bat
 ```
+
+打开 http://127.0.0.1:8000 ，后台是 /admin/ ，手机是 /m/ 。登录账号 admin，密码 admin。
 
 ## 数据库配置
 
@@ -65,7 +61,7 @@ DATABASES = {
 > mysql -uroot -proot mis < Install/mis.sql
 
 ## 运行测试服务器
-> python manage.py runserver
+> .\start.bat
 
 ## 修改管理员账户密码
 ```

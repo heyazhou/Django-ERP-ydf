@@ -1,0 +1,60 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>录入{{ title }}</h2>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <label>名称</label>
+    <input name="name" required>
+    {% if kind == 'face' %}
+      <label>电话</label>
+      <input name="phone">
+      <label>证件号</label>
+      <input name="idcard">
+      <label>岗位</label>
+      <select name="position">
+        {% for item in positions %}
+          <option value="{{ item.pk }}">{{ item.name }}</option>
+        {% endfor %}
+      </select>
+      <label>人脸照片</label>
+      <input type="file" name="photo" accept="image/*" capture="user">
+    {% elif kind == 'material' %}
+      <label>规格</label>
+      <input name="spec">
+      <label>条码或二维码内容</label>
+      <input name="barcode" value="{{ code }}">
+      <label>类别</label>
+      <select name="supply_kind">
+        <option value="">未分类</option>
+        {% for key, label in supplies %}
+          <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+      <label>物料照片</label>
+      <input type="file" name="photo" accept="image/*" capture="environment">
+      <label>二维图纸</label>
+      <input type="file" name="drawing_file">
+      <label>三维模型</label>
+      <input type="file" name="model_file">
+    {% elif kind == 'machine' %}
+      <label>设备类型</label>
+      <select name="machine_type">
+        {% for key, label in machines %}
+          <option value="{{ key }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+      <label>品牌型号</label>
+      <input name="spec">
+      <label>设备照片</label>
+      <input type="file" name="photo" accept="image/*" capture="environment">
+    {% else %}
+      <label>规格</label>
+      <input name="spec">
+      <label>照片</label>
+      <input type="file" name="photo" accept="image/*" capture="environment">
+    {% endif %}
+    <button type="submit">保存并传输</button>
+  </form>
+</div>
+{% endblock %}

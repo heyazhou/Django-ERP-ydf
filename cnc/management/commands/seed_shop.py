@@ -105,6 +105,7 @@ class Command(BaseCommand):
         ops = list(order.operations.order_by('seq', 'id'))
         machines = {'MANUAL': lathe, 'MC': center}
         for operation in ops:
+            operation.refresh_from_db()
             if operation.outsource:
                 sheet = OutsourceOrder.objects.create(
                     work_order=order, operation=operation, vendor=vendor,
@@ -112,6 +113,11 @@ class Command(BaseCommand):
                 sheet.send_out(user)
                 sheet.receive(user)
                 operation.refresh_from_db()
+            if operation.machine_type == 'QC' and not Inspection.objects.filter(
+                    operation=operation, result__in=('pass', 'concession')).exists():
+                Inspection.objects.create(
+                    work_order=order, operation=operation, kind='final', result='pass',
+                    check_qty=order.qty, inspector=user, note='终检合格')
             if operation.status == 'ready':
                 operation.start(user, machines.get(operation.machine_type))
             operation.refresh_from_db()
@@ -120,9 +126,6 @@ class Command(BaseCommand):
             operation.refresh_from_db()
             if operation.status != 'done':
                 operation.finish(user)
-        Inspection.objects.create(
-            work_order=order, operation=ops[-1], kind='final', result='pass',
-            check_qty=order.qty, inspector=user, note='终检合格')
         order.refresh_from_db()
         if order.status != 'done':
             order.status = 'done'

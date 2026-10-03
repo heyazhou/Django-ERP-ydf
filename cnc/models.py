@@ -732,6 +732,35 @@ class ShopEvent(models.Model):
         return '%s %s' % (self.token, self.summary)
 
 
+class Handoff(models.Model):
+    """手机上的交接。物流、数据和信息都从这里传给下一个人。"""
+
+    token = models.CharField('二维码', max_length=40, db_index=True)
+    kind = models.CharField('类型', max_length=12, default='info')
+    sender = models.ForeignKey(
+        User, verbose_name='发出人', blank=True, null=True,
+        related_name='handoffs_out', on_delete=models.SET_NULL)
+    receiver = models.ForeignKey(
+        User, verbose_name='接收人', blank=True, null=True,
+        related_name='handoffs_in', on_delete=models.SET_NULL)
+    place = models.CharField('地点', max_length=40, blank=True, default='')
+    qty = models.CharField('数量', max_length=20, blank=True, default='')
+    body = models.CharField('内容', max_length=200, blank=True, default='')
+    is_read = models.BooleanField('已读', default=False)
+    created = models.DateTimeField('时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '现场交接'
+        verbose_name_plural = '现场交接'
+        ordering = ['-id']
+
+    def __str__(self):
+        return '%s %s' % (self.token, self.body)
+
+    def get_kind_label(self):
+        return {'move': '物流', 'data': '数据', 'info': '信息'}.get(self.kind, self.kind)
+
+
 class FaceSample(models.Model):
     """职员人脸样本。基础数据保存照片后，供本地人脸模型训练。"""
 

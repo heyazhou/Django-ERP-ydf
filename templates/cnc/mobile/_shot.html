@@ -1,0 +1,7 @@
+{% if shot.object %}
+<div class="card">
+  <div class="row"><span>拍摄对象</span><b>{{ shot.object }}</b></div>
+  <div class="row"><span>机主</span><b>{{ shot.owner_id }} {{ shot.owner }}</b></div>
+  <div class="row"><span>拍照时间</span><b>{{ shot.at }}</b></div>
+</div>
+{% endif %}
