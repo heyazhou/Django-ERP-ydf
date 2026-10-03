@@ -1,0 +1,37 @@
+from django.urls import path
+
+from cnc import identify, views
+from quality import views as quality_views
+
+urlpatterns = [
+    path('', views.home, name='cnc_home'),
+    path('scan/', views.scan, name='cnc_scan'),
+    path('ai/', identify.identify, name='cnc_identify'),
+    path('emp/<int:pk>/', identify.employee_page, name='cnc_employee'),
+    path('mat/<int:pk>/', identify.material_page, name='cnc_material'),
+    path('q/<str:token>/', views.open_token, name='cnc_open'),
+    path('doc/<str:token>/', views.document, name='cnc_doc'),
+    path('qr/<str:token>/', views.qr_image, name='cnc_qr'),
+    path('wo/<int:pk>/', views.workorder, name='cnc_workorder'),
+    path('wo/<int:pk>/card/', views.traveler, name='cnc_traveler'),
+    path('op/<int:pk>/', views.operation, name='cnc_operation'),
+    path('machine/<int:pk>/', views.machine, name='cnc_machine'),
+    path('mn/<int:pk>/', views.maintain, name='cnc_maintain'),
+    path('tool/<int:pk>/', views.tool, name='cnc_tool'),
+    path('fixture/<int:pk>/', views.fixture, name='cnc_fixture'),
+    path('lot/<int:pk>/', views.lot, name='cnc_lot'),
+    path('qc/<int:pk>/', views.inspection, name='cnc_inspection'),
+    path('qm/', quality_views.open_list, name='quality_open'),
+    path('qm/<int:pk>/', quality_views.check_page, name='quality_check'),
+    path('qs/<int:pk>/', quality_views.standard_page, name='quality_standard'),
+    path('nc/<int:pk>/', views.program, name='cnc_program'),
+    path('drawing/<int:pk>/', views.drawing, name='cnc_drawing'),
+    path('os/<int:pk>/', views.outsource, name='cnc_outsource'),
+    path('routing/<int:pk>/', views.routing, name='cnc_routing'),
+    path('ao/<int:pk>/', views.assembly, name='cnc_assembly'),
+    path('au/<int:pk>/', views.assembly_unit, name='cnc_assembly_unit'),
+    path('board/', views.board_index, name='cnc_board'),
+    path('board/<int:pk>/', views.board_area, name='cnc_board_area'),
+    path('report/', views.report_index, name='cnc_reports'),
+    path('report/<str:name>/', views.report, name='cnc_report'),
+]

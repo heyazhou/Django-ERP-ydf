@@ -1,0 +1,22 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}流转卡 {{ order.code }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>流转卡 {{ order.code }}</h2>
+  <div class="row"><span>零件</span><b>{{ order.title }}</b></div>
+  <div class="row"><span>图号</span><b>{{ order.drawing_no|default:"-" }}</b></div>
+  <div class="row"><span>数量</span><b>{{ order.qty }}</b></div>
+  <div class="row"><span>交期</span><b>{{ order.due_date|default:"-" }}</b></div>
+  <div class="qr"><img src="{% url 'cnc_qr' order.qr_token %}" alt="工单码"></div>
+</div>
+{% for op in operations %}
+<div class="card">
+  <h2>{{ op.seq }} {{ op.name }}</h2>
+  <div class="row"><span>设备类型</span><b>{{ op.get_machine_type_display }}</b></div>
+  <div class="row"><span>计划</span><b>{{ op.plan_qty }}</b></div>
+  <div class="qr"><img src="{% url 'cnc_qr' op.qr_token %}" alt="工序码"></div>
+  <div style="font-size:13px;color:#667;">合格 ______ 报废 ______ 检验 ______ 签字 ______</div>
+</div>
+{% endfor %}
+<button class="noprint" onclick="window.print()">打印</button>
+{% endblock %}

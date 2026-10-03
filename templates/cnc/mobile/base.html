@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>{% block title %}数控车间{% endblock %}</title>
+{% block extra_head %}{% endblock %}
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #eef2f5; color: #1c2830; }
+  a { color: #0b6e4f; text-decoration: none; }
+  header { background: #0b6e4f; color: #fff; padding: 14px 16px 10px; }
+  header a { color: #fff; }
+  header h1 { font-size: 18px; margin: 0 0 8px; font-weight: 650; }
+  nav { display: flex; gap: 8px; }
+  nav a { background: rgba(255,255,255,.16); border-radius: 999px; padding: 6px 12px; font-size: 14px; }
+  main { padding: 12px 12px 28px; max-width: 720px; margin: 0 auto; }
+  .card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .card h2 { font-size: 16px; margin: 0 0 10px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #eef2f5; font-size: 15px; }
+  .row span { color: #667; }
+  .btn, button, .btn-link {
+    display: block; width: 100%; text-align: center; border: 0; border-radius: 12px;
+    background: #0b6e4f; color: #fff; font-size: 17px; padding: 14px 12px; margin-top: 8px;
+  }
+  button.secondary, a.secondary { background: #d7ebe3; color: #0b6e4f; }
+  button.warn { background: #b45309; }
+  button.danger { background: #b42318; }
+  input, select, textarea {
+    width: 100%; font-size: 16px; padding: 12px; border-radius: 10px; border: 1px solid #ccd5dc; margin-top: 6px;
+  }
+  label { display: block; margin-top: 10px; font-size: 14px; color: #445; }
+  .msg { padding: 10px 12px; border-radius: 10px; margin-bottom: 10px; }
+  .msg.error { background: #fde8e6; color: #8a1f14; }
+  .msg.success { background: #e5f6ee; color: #0b6e4f; }
+  .pill { display: inline-block; background: #e7f5ef; color: #0b6e4f; border-radius: 999px; padding: 2px 8px; font-size: 12px; }
+  .late { color: #b42318; font-weight: 650; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid #eef2f5; vertical-align: top; }
+  .qr { text-align: center; }
+  .qr img { width: 180px; height: 180px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  main.wide { max-width: 1400px; }
+  .lanes { display: grid; grid-template-columns: repeat(4, minmax(200px, 1fr)); gap: 10px; align-items: start; }
+  .lane { background: #e7edf1; border-radius: 14px; padding: 10px; min-height: 120px; }
+  .lane h2 { font-size: 15px; margin: 0 0 8px; }
+  .kcard { display: block; background: #fff; border-radius: 12px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #0b6e4f; }
+  .kcard.running { border-left-color: #1d4ed8; }
+  .kcard.out { border-left-color: #b45309; }
+  .kcard.done { border-left-color: #94a3b8; }
+  .kcard.coming { border-left-color: #cbd5e1; }
+  .kcard .late, .late-card { color: #b42318; }
+  .kcard div { font-size: 13px; color: #445; margin-top: 3px; }
+  .area-switch { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
+  .area-switch a { white-space: nowrap; background: #fff; border-radius: 999px; padding: 8px 12px; }
+  .area-switch a.on { background: #0b6e4f; color: #fff; }
+  .machines { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
+  .machines a { background: #fff; border-radius: 12px; padding: 8px 10px; white-space: nowrap; }
+  body.wall header nav { display: none; }
+  @media (max-width: 800px) {
+    .lanes { display: flex; overflow-x: auto; }
+    .lane { min-width: 240px; }
+  }
+  @media print {
+    header, nav, .noprint, button, form { display: none !important; }
+    body { background: #fff; }
+    .card { box-shadow: none; break-inside: avoid; }
+  }
+</style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<header>
+  <h1><a href="{% url 'cnc_home' %}">数控机加工车间</a></h1>
+  <nav>
+    <a href="{% url 'cnc_home' %}">车间</a>
+    <a href="{% url 'cnc_board' %}">看板</a>
+    <a href="{% url 'cnc_scan' %}">扫码</a>
+    <a href="{% url 'cnc_identify' %}">识别</a>
+    <a href="{% url 'cnc_reports' %}">报表</a>
+    <a href="/admin/">后台</a>
+  </nav>
+</header>
+<main class="{% block main_class %}{% endblock %}">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="msg {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

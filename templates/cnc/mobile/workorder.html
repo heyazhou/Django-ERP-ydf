@@ -1,0 +1,57 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ order.code }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ order.code }} {{ order.title }}</h2>
+  <img src="{% url 'cnc_qr' order.qr_token %}" alt="工单二维码">
+  <div>{{ order.get_status_display }} · 进度 {{ order.progress_text }}</div>
+</div>
+<div class="card">
+  <div class="row"><span>图号</span><b>{{ order.drawing_no|default:"-" }}</b></div>
+  <div class="row"><span>数量</span><b>{{ order.qty }}</b></div>
+  <div class="row"><span>交期</span><b class="{% if order.is_late %}late{% endif %}">{{ order.due_date|default:"-" }}</b></div>
+  <div class="row"><span>客户</span><b>{{ order.customer|default:"-" }}</b></div>
+  <div class="row"><span>毛坯</span><b>{{ order.blank_spec|default:"-" }}</b></div>
+  {% if order.status == 'draft' %}
+  <form method="post" class="noprint">{% csrf_token %}
+    <input type="hidden" name="action" value="release">
+    <button type="submit">下达生产</button>
+  </form>
+  {% endif %}
+  <a class="btn secondary" href="{% url 'cnc_traveler' order.pk %}">打印流转卡</a>
+</div>
+<div class="card">
+  <h2>质量控制</h2>
+  {% for point in gaps %}
+    <div class="row"><span>{{ point }}</span><b class="late">未完成</b></div>
+  {% empty %}
+    <div class="row"><span>必检点</span><b>已完成或本单不涉及</b></div>
+  {% endfor %}
+  {% for record in checks %}
+    <div class="row"><a href="{% url 'quality_check' record.pk %}">{{ record.code }} {{ record.get_stage_display }}</a><span>{{ record.get_result_display }}</span></div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>加工图纸和模型</h2>
+  {% if order.material.drawing_file %}<div class="row"><a href="{{ order.material.drawing_file.url }}">二维图纸</a><span>{{ order.material.code }}</span></div>{% endif %}
+  {% if order.material.model_file %}<div class="row"><a href="{{ order.material.model_file.url }}">三维模型</a><span>{{ order.material.code }}</span></div>{% endif %}
+  {% for drawing in drawings %}
+    <div class="row"><a href="{% url 'cnc_drawing' drawing.pk %}">{{ drawing.drawing_no|default:drawing.code }} {{ drawing.name }}</a></div>
+  {% endfor %}
+  {% if not order.material.drawing_file and not order.material.model_file and not drawings %}
+    <div>二维图纸和三维模型在后台「基础数据」的物料里录入。</div>
+  {% endif %}
+</div>
+<div class="card">
+  <h2>工序</h2>
+  {% for op in operations %}
+    <div class="row">
+      <a href="{% url 'cnc_operation' op.pk %}">{{ op.seq }} {{ op.name }}</a>
+      <span>{{ op.get_status_display }} {{ op.good_qty }}/{{ op.plan_qty }}</span>
+    </div>
+  {% empty %}
+    <div>还没有工序。在后台添加工序，或选择工艺路线后下达。</div>
+  {% endfor %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

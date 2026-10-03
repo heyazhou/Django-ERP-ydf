@@ -1,0 +1,18 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ title }}</h2>
+  <img src="{% url 'cnc_qr' token %}" alt="二维码">
+  <div>{{ headline }}</div>
+</div>
+<div class="card">
+  {% for label, value in rows %}
+    <div class="row"><span>{{ label }}</span><b>{{ value }}</b></div>
+  {% endfor %}
+  {% if admin_url %}
+    <a class="btn secondary" href="{{ admin_url }}">打开后台单据</a>
+  {% endif %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

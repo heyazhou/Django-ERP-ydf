@@ -1,0 +1,48 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ item.name }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ item.code }} {{ item.name }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="设备二维码">
+  <div>{{ item.get_machine_type_display }} · {{ item.get_status_display }}</div>
+</div>
+{% if item.photo %}<div class="card"><img src="{{ item.photo.url }}" alt="设备照片" style="width:100%;border-radius:12px;"></div>{% endif %}
+<div class="card noprint">
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <label>给设备拍一张照片存档。识别喷好的二维码请用“识别”。</label>
+    <input type="file" name="photo" accept="image/*" capture="environment">
+    <button class="secondary" type="submit">保存照片</button>
+  </form>
+</div>
+<div class="card">
+  <div class="row"><span>车间</span><b>{{ item.workshop }}</b></div>
+  <div class="row"><span>品牌型号</span><b>{{ item.brand|default:"-" }}</b></div>
+  <div class="row"><span>小时费率</span><b>{{ item.hour_rate }}</b></div>
+</div>
+<div class="card noprint">
+  <h2>切换状态</h2>
+  {% for key, label in statuses %}
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="status" value="{{ key }}">
+    <button class="{% if key == 'down' %}danger{% elif key != 'run' %}secondary{% endif %}" type="submit">{{ label }}</button>
+  </form>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>维修保养</h2>
+  {% for sheet in maintains %}
+    <div class="row"><a href="{% url 'cnc_maintain' sheet.pk %}">{{ sheet.get_kind_display }} {{ sheet.title }}</a><span>{{ sheet.get_status_display }}</span></div>
+  {% empty %}
+    <div>没有未完成的维修或保养。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>正在加工</h2>
+  {% for job in jobs %}
+    <div class="row"><a href="{% url 'cnc_operation' job.pk %}">{{ job.work_order.code }} {{ job.name }}</a></div>
+  {% empty %}
+    <div>这台设备当前没有在制工序。</div>
+  {% endfor %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

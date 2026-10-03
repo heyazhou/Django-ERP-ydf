@@ -1,0 +1,146 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ op.name }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>{{ op.seq }} {{ op.name }}</h2>
+  <div class="row"><span>工单</span><a href="{% url 'cnc_workorder' op.work_order_id %}">{{ op.work_order.code }} {{ op.work_order.title }}</a></div>
+  <div class="row"><span>状态</span><b>{{ op.get_status_display }}</b></div>
+  <div class="row"><span>计划 / 合格 / 报废</span><b>{{ op.plan_qty }} / {{ op.good_qty }} / {{ op.scrap_qty }}</b></div>
+  <div class="row"><span>设备</span><b>{{ op.machine|default:"未指定" }}</b></div>
+  <div class="qr"><img src="{% url 'cnc_qr' op.qr_token %}" alt="工序二维码" width="140"></div>
+</div>
+{% if op.program %}
+<div class="card">
+  <h2>数控程序</h2>
+  <div class="row"><a href="{% url 'cnc_program' op.program.pk %}">{{ op.program.code }} {{ op.program.name }}</a><span>{{ op.program.version }}</span></div>
+  {% if op.setup_note %}<div>调机：{{ op.setup_note }}</div>{% endif %}
+</div>
+{% endif %}
+{% if op.machine_type == 'MANUAL' %}
+<div class="card">这道是手动设备加工，不使用数控程序。</div>
+{% endif %}
+{% if op.machine_type == 'PROG' or op.machine_type == 'SETUP' %}
+<div class="card noprint">
+  <h2>{% if op.machine_type == 'PROG' %}设计加工程序{% else %}调机使用的程序{% endif %}</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="bind_program">
+    <label>已有程序
+      <select name="program">
+        <option value="">请选择</option>
+        {% for program in programs %}
+          <option value="{{ program.pk }}" {% if op.program_id == program.pk %}selected{% endif %}>{{ program.code }} {{ program.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% if op.machine_type == 'SETUP' %}
+      <label>对刀和补偿<input name="setup_note" value="{{ op.setup_note }}"></label>
+    {% endif %}
+    <button type="submit">绑定程序</button>
+  </form>
+  {% if op.machine_type == 'PROG' %}
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="new_program">
+    <label>新程序名<input name="name"></label>
+    <label>版本<input name="version" value="A"></label>
+    <label>说明<input name="note"></label>
+    <button class="secondary" type="submit">建立程序</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+{% if op.status == 'ready' or op.status == 'running' %}
+<div class="card noprint">
+  <h2>开工</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="start">
+    <label>使用设备</label>
+    <select name="machine">
+      <option value="">沿用当前设备</option>
+      {% for machine in machines %}
+        <option value="{{ machine.pk }}" {% if op.machine_id == machine.pk %}selected{% endif %}>{{ machine.code }} {{ machine.name }}（{{ machine.get_status_display }}）</option>
+      {% endfor %}
+    </select>
+    <button type="submit">开工</button>
+  </form>
+</div>
+<div class="card noprint">
+  <h2>报工</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="report">
+    <label>合格数量</label>
+    <input name="good" inputmode="decimal" value="0">
+    <label>报废数量</label>
+    <input name="scrap" inputmode="decimal" value="0">
+    <label>报废原因</label>
+    <select name="reason">
+      <option value="">无</option>
+      {% for key, label in reasons %}
+        <option value="{{ key }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+    <label>本次工时（分钟）</label>
+    <input name="minutes" inputmode="decimal" value="0">
+    <label>备注</label>
+    <input name="note">
+    <button type="submit">提交报工</button>
+  </form>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="finish">
+    <button class="warn" type="submit">确认完工并流转下工序</button>
+  </form>
+</div>
+<div class="card noprint">
+  <h2>质检</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="inspect">
+    <label>类型</label>
+    <select name="kind">
+      <option value="first">首件</option>
+      <option value="patrol">巡检</option>
+      <option value="final">终检</option>
+    </select>
+    <label>结论</label>
+    <select name="result">
+      <option value="pass">合格</option>
+      <option value="fail">不合格</option>
+      <option value="concession">让步接收</option>
+    </select>
+    <label>检验数量</label>
+    <input name="check_qty" inputmode="decimal" value="1">
+    <label>不合格数量</label>
+    <input name="fail_qty" inputmode="decimal" value="0">
+    <label>说明</label>
+    <input name="note">
+    <button class="secondary" type="submit">提交质检</button>
+  </form>
+</div>
+{% elif op.status == 'out' %}
+<div class="card">此外协工序尚未回厂。回厂后才能继续报工。</div>
+{% elif op.status == 'wait' %}
+<div class="card">上道工序还没完工，这道工序暂时不能开工。</div>
+{% else %}
+<div class="card">这道工序已经完工。</div>
+{% endif %}
+{% if checks %}
+<div class="card">
+  <h2>检验记录</h2>
+  {% for record in checks %}
+    <div class="row"><a href="{% url 'quality_check' record.pk %}">{{ record.code }} {{ record.get_stage_display }}</a><span>{{ record.get_result_display }}</span></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% if drawings or programs and op.machine_type != 'MANUAL' %}
+<div class="card">
+  <h2>{% if op.machine_type == 'MANUAL' %}图纸{% else %}程序和图纸{% endif %}</h2>
+  {% if op.machine_type != 'MANUAL' %}
+  {% for program in programs %}
+    <div class="row"><a href="{% url 'cnc_program' program.pk %}">程序 {{ program.name }} {{ program.version }}</a></div>
+  {% endfor %}
+  {% endif %}
+  {% for drawing in drawings %}
+    <div class="row"><a href="{% url 'cnc_drawing' drawing.pk %}">图纸 {{ drawing.drawing_no }} {{ drawing.name }}</a></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

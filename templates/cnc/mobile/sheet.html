@@ -1,0 +1,31 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ title }}</h2>
+  {% if item.qr_token %}<img src="{% url 'cnc_qr' item.qr_token %}" alt="二维码">{% endif %}
+</div>
+{% if item.photo %}<div class="card"><img src="{{ item.photo.url }}" alt="照片" style="width:100%;border-radius:12px;"></div>{% endif %}
+{% if photo_form %}
+<div class="card noprint">
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    <input type="hidden" name="action" value="photo">
+    <label>给实物拍一张照片存档。识别喷好的二维码请用“识别”。</label>
+    <input type="file" name="photo" accept="image/*" capture="environment">
+    <button class="secondary" type="submit">保存照片</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  {% for label, value in rows %}
+    <div class="row"><span>{{ label }}</span><b>{{ value|default:"-" }}</b></div>
+  {% endfor %}
+  {% for key, label in buttons %}
+  <form method="post" class="noprint">{% csrf_token %}
+    <input type="hidden" name="status" value="{{ key }}">
+    <button class="secondary" type="submit">{{ label }}</button>
+  </form>
+  {% endfor %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

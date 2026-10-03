@@ -1,0 +1,106 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ area.name }}{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block body_class %}{% if wall %}wall{% endif %}{% endblock %}
+{% block extra_head %}{% if wall %}<meta http-equiv="refresh" content="20">{% endif %}{% endblock %}
+{% block content %}
+<div class="area-switch">
+  <a href="{% url 'cnc_board' %}">全厂</a>
+  {% for item in areas %}
+    <a href="{% url 'cnc_board_area' item.pk %}{% if wall %}?wall=1{% endif %}" {% if item.pk == area.pk %}class="on"{% endif %}>{{ item.name }}</a>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>{{ area.name }}</h2>
+  <div>{{ area.note }}</div>
+  {% if not wall %}
+    <a class="btn secondary" href="?wall=1">本区投屏</a>
+  {% endif %}
+</div>
+{% if machines %}
+<div class="machines">
+  {% for machine in machines %}
+    <a href="{% url 'cnc_machine' machine.pk %}">{{ machine.name }} · {{ machine.get_status_display }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+{% if maintain_lanes %}
+<div class="lanes">
+  {% for key, title, sheets in maintain_lanes %}
+    <section class="lane">
+      <h2>{{ title }} {{ sheets|length }}</h2>
+      {% for sheet in sheets %}
+        <a class="kcard {{ key }}" href="{% url 'cnc_maintain' sheet.pk %}">
+          <b>{{ sheet.code }} {{ sheet.get_kind_display }}</b>
+          <div>{{ sheet.machine }} · {{ sheet.title }}</div>
+          <div>{{ sheet.get_status_display }}{% if sheet.technician %} · {{ sheet.technician }}{% endif %}</div>
+        </a>
+      {% empty %}
+        <div>暂无</div>
+      {% endfor %}
+    </section>
+  {% endfor %}
+</div>
+{% endif %}
+{% if assembly_lanes %}
+<div class="lanes">
+  {% for key, title, orders in assembly_lanes %}
+    <section class="lane">
+      <h2>{{ title }} {{ orders|length }}</h2>
+      {% for order in orders %}
+        <a class="kcard {{ key }}{% if order.is_late %} late-card{% endif %}" href="{% url 'cnc_assembly' order.pk %}">
+          <b>{{ order.code }} {{ order.title }}</b>
+          <div>齐套 {{ order.kit_text }} · 合格 {{ order.unit_text }}</div>
+          <div>{{ order.station|default:"未派工位" }}</div>
+          {% if order.due_date %}<div {% if order.is_late %}class="late"{% endif %}>交期 {{ order.due_date }}</div>{% endif %}
+        </a>
+      {% empty %}
+        <div>暂无</div>
+      {% endfor %}
+    </section>
+  {% endfor %}
+</div>
+{% endif %}
+{% if lanes %}
+<div class="lanes">
+  {% for key, title, cards in lanes %}
+    <section class="lane">
+      <h2>{{ title }} {{ cards|length }}</h2>
+      {% for op in cards %}
+        <a class="kcard {{ key }}{% if op.work_order.is_late %} late-card{% endif %}" href="{% url 'cnc_operation' op.pk %}">
+          <b>{{ op.work_order.code }} {{ op.work_order.title }}</b>
+          <div>{{ op.seq }} {{ op.name }} · {{ op.good_qty }}/{{ op.plan_qty }}</div>
+          <div>{{ op.machine|default:"未派设备" }}{% if op.operator %} · {{ op.operator }}{% endif %}</div>
+          {% if op.work_order.due_date %}<div {% if op.work_order.is_late %}class="late"{% endif %}>交期 {{ op.work_order.due_date }}</div>{% endif %}
+        </a>
+      {% empty %}
+        <div>暂无</div>
+      {% endfor %}
+    </section>
+  {% endfor %}
+  {% if lots %}
+    <section class="lane">
+      <h2>物料批次 {{ lots|length }}</h2>
+      {% for lot in lots %}
+        <a class="kcard coming" href="{% url 'cnc_lot' lot.pk %}">
+          <b>{{ lot.heat_no|default:lot.code }}</b>
+          <div>{{ lot.material }} · {{ lot.qty }}</div>
+          <div>{{ lot.get_status_display }}{% if lot.work_order %} · {{ lot.work_order.code }}{% endif %}</div>
+        </a>
+      {% endfor %}
+    </section>
+  {% endif %}
+  {% if finished %}
+    <section class="lane">
+      <h2>完工工单 {{ finished|length }}</h2>
+      {% for order in finished %}
+        <a class="kcard done" href="{% url 'cnc_workorder' order.pk %}">
+          <b>{{ order.code }} {{ order.title }}</b>
+          <div>{{ order.qty }} · {{ order.customer|default:"" }}</div>
+        </a>
+      {% endfor %}
+    </section>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

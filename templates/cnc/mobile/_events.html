@@ -1,0 +1,8 @@
+<div class="card">
+  <h2>流转记录</h2>
+  {% for event in events %}
+    <div class="row"><span>{{ event.created|date:"m-d H:i" }} {{ event.user|default:"" }}</span><b>{{ event.summary }}</b></div>
+  {% empty %}
+    <div>还没有扫码或报工记录。</div>
+  {% endfor %}
+</div>

@@ -1,0 +1,58 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>{{ title }}</h2>
+  {% if name == 'quality' %}
+    <div class="row"><span>本月合格</span><b>{{ quality.good }}</b></div>
+    <div class="row"><span>本月报废</span><b>{{ quality.scrap }}</b></div>
+    <div class="row"><span>报废率</span><b>{{ quality.rate }}%</b></div>
+    <div class="row"><span>质检单 / 不合格单</span><b>{{ quality.sheets }} / {{ quality.fail_sheets }}</b></div>
+    <div class="row"><span>进行中的检验</span><b>{{ quality.open_checks }}</b></div>
+    {% for stage in quality.stages %}
+      <div class="row"><span>{{ stage.label }}</span><b>{{ stage.total }} / 不合格 {{ stage.fail }}</b></div>
+    {% endfor %}
+    {% for reason in quality.reasons %}
+      <div class="row"><span>{{ reason.label }}</span><b>{{ reason.qty }}</b></div>
+    {% endfor %}
+  {% elif name == 'operator' %}
+    <table>
+      <tr><th>人员</th><th>合格</th><th>报废</th><th>分钟</th></tr>
+      {% for row in rows %}
+        <tr><td>{{ row.name }}</td><td>{{ row.good }}</td><td>{{ row.scrap }}</td><td>{{ row.minutes }}</td></tr>
+      {% empty %}
+        <tr><td colspan="4">本月还没有报工。</td></tr>
+      {% endfor %}
+    </table>
+  {% elif name == 'machine' %}
+    <table>
+      <tr><th>设备</th><th>状态</th><th>今日分钟</th></tr>
+      {% for row in rows %}
+        <tr><td><a href="{{ row.url }}">{{ row.code }} {{ row.name }}</a></td><td>{{ row.status }}</td><td>{{ row.minutes }}</td></tr>
+      {% endfor %}
+    </table>
+  {% elif name == 'tool' %}
+    <table>
+      <tr><th>刀具</th><th>已用/寿命</th><th>占比</th></tr>
+      {% for row in rows %}
+        <tr><td><a href="{{ row.url }}">{{ row.code }} {{ row.name }}</a></td><td>{{ row.used }}/{{ row.life }}</td><td>{{ row.ratio }}%</td></tr>
+      {% empty %}
+        <tr><td colspan="3">没有达到 80% 寿命的刀具。</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <table>
+      <tr><th>单号</th><th>内容</th><th>状态</th></tr>
+      {% for row in rows %}
+        <tr>
+          <td><a href="{{ row.url }}">{{ row.code }}</a></td>
+          <td>{{ row.title }}{% if row.due %}<div class="{% if row.late %}late{% endif %}">{{ row.due }}</div>{% endif %}{% if row.vendor %}<div>{{ row.vendor }}</div>{% endif %}</td>
+          <td>{{ row.status }}{% if row.progress %}<div>{{ row.progress }}</div>{% endif %}{% if row.qty %} {{ row.qty }}{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="3">没有数据。</td></tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

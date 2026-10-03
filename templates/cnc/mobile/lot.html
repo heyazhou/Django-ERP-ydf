@@ -1,0 +1,37 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}批次 {{ item.code }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ item.code }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="批次二维码">
+  <div>{{ item.get_status_display }}</div>
+</div>
+<div class="card">
+  <div class="row"><span>物料</span><b>{{ item.material|default:"-" }}</b></div>
+  <div class="row"><span>炉批号</span><b>{{ item.heat_no|default:"-" }}</b></div>
+  <div class="row"><span>数量</span><b>{{ item.qty }}</b></div>
+  <div class="row"><span>仓库</span><b>{{ item.warehouse|default:"-" }}</b></div>
+  <div class="row"><span>工单</span><b>{% if item.work_order %}<a href="{% url 'cnc_workorder' item.work_order_id %}">{{ item.work_order }}</a>{% else %}-{% endif %}</b></div>
+</div>
+<div class="card noprint">
+  <h2>来料检验</h2>
+  {% if incoming %}
+    <div class="row"><a href="{% url 'quality_check' incoming.pk %}">{{ incoming.code }}</a><span>{{ incoming.get_result_display }}</span></div>
+  {% else %}
+    <div>这批物料还没有来料检验。</div>
+  {% endif %}
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="incoming">
+    <button class="secondary" type="submit">开来料检验</button>
+  </form>
+</div>
+<div class="card noprint">
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="bind">
+    <label>发料到工单编号</label>
+    <input name="wo_code" placeholder="WO00001">
+    <button type="submit">发料</button>
+  </form>
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

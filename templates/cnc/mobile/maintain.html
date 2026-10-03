@@ -1,0 +1,35 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ item.code }} {{ item.title }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="二维码">
+  <div class="row"><span>类型</span><b>{{ item.get_kind_display }}</b></div>
+  <div class="row"><span>设备</span><a href="{% url 'cnc_machine' item.machine_id %}">{{ item.machine }}</a></div>
+  <div class="row"><span>状态</span><b>{{ item.get_status_display }}</b></div>
+  <div class="row"><span>现象</span><b>{{ item.symptom|default:"—" }}</b></div>
+  <div class="row"><span>维修人</span><b>{{ item.technician|default:"—" }}</b></div>
+  <div class="row"><span>计划</span><b>{{ item.plan_date|default:"—" }}</b></div>
+  {% if item.work_done %}<div>处理：{{ item.work_done }}</div>{% endif %}
+  {% if item.spare %}<div>备件：{{ item.spare }}</div>{% endif %}
+</div>
+{% if item.status == 'open' %}
+<div class="card noprint">
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="start">
+    <button type="submit">开始{{ item.get_kind_display }}</button>
+  </form>
+</div>
+{% elif item.status == 'doing' %}
+<div class="card noprint">
+  <h2>完工</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="finish">
+    <label>处理内容<input name="work_done" value="{{ item.work_done }}"></label>
+    <label>更换备件<input name="spare" value="{{ item.spare }}"></label>
+    <button type="submit">完成并恢复设备</button>
+  </form>
+</div>
+{% endif %}
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}工艺 {{ item.name }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ item.code }} {{ item.name }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="工艺二维码">
+  <div>版本 {{ item.version }} · {{ item.material|default:"通用" }}</div>
+</div>
+<div class="card">
+  {% for step in steps %}
+    <div class="row"><b>{{ step.seq }} {{ step.name }}</b><span>{{ step.get_machine_type_display }} {% if step.outsource %}外协{% endif %}</span></div>
+  {% empty %}
+    <div>还没有工序。</div>
+  {% endfor %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

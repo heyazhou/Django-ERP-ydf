@@ -1,0 +1,71 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ record.code }} {{ record.get_stage_display }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ record.code }} {{ record.get_stage_display }}</h2>
+  <img src="{% url 'cnc_qr' record.qr_token %}" alt="检验二维码">
+  <div>{{ record.get_result_display }} · {{ record.get_status_display }}</div>
+</div>
+<div class="card">
+  {% if record.work_order %}<div class="row"><span>工单</span><a href="{% url 'cnc_workorder' record.work_order_id %}">{{ record.work_order }}</a></div>{% endif %}
+  {% if record.operation %}<div class="row"><span>工序</span><a href="{% url 'cnc_operation' record.operation_id %}">{{ record.operation }}</a></div>{% endif %}
+  {% if record.lot %}<div class="row"><span>批次</span><a href="{% url 'cnc_lot' record.lot_id %}">{{ record.lot }}</a></div>{% endif %}
+  {% if record.outsource %}<div class="row"><span>外协</span><a href="{% url 'cnc_outsource' record.outsource_id %}">{{ record.outsource }}</a></div>{% endif %}
+  {% if record.assembly_unit %}<div class="row"><span>装配</span><a href="{% url 'cnc_assembly_unit' record.assembly_unit_id %}">{{ record.assembly_unit }}</a></div>{% endif %}
+  <div class="row"><span>标准</span><b>{% if record.standard %}<a href="{% url 'quality_standard' record.standard_id %}">{{ record.standard.name }}</a>{% else %}未匹配标准{% endif %}</b></div>
+  <div class="row"><span>数量</span><b>检 {{ record.check_qty }} / 不合格 {{ record.fail_qty }}</b></div>
+</div>
+<form method="post">{% csrf_token %}
+  <div class="card">
+    <h2>实测</h2>
+    {% for line in record.measures.all %}
+      <label>{{ line.name }}{% if line.key_size %}（关键）{% endif %}
+        {% if line.nominal or line.lower_limit or line.upper_limit %}
+          <span style="color:#667;">公称 {{ line.nominal|default:"-" }}，{{ line.lower_limit|default:"-" }} ~ {{ line.upper_limit|default:"-" }} {{ line.unit }}</span>
+        {% endif %}
+        {% if line.method %}<span style="color:#667;"> {{ line.method }}</span>{% endif %}
+        <input name="m{{ line.pk }}" value="{{ line.measured }}" {% if record.status == 'closed' %}readonly{% endif %}>
+      </label>
+      {% if line.result %}<div class="row"><span>判定</span><b>{{ line.get_result_display }}</b></div>{% endif %}
+    {% empty %}
+      <div>这张记录没有检验项目。可在后台为该环节建立检验标准。</div>
+    {% endfor %}
+  </div>
+  {% if record.status == 'open' %}
+  <div class="card">
+    <h2>结论</h2>
+    <label>结论
+      <select name="result">
+        {% for value, label in results %}
+          <option value="{{ value }}" {% if record.result == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>处置
+      <select name="disposition">
+        {% for value, label in dispositions %}
+          <option value="{{ value }}" {% if record.disposition == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>说明<input name="note" value="{{ record.note }}"></label>
+    <button type="submit" name="action" value="save">保存实测</button>
+    <button class="secondary" type="submit" name="action" value="close">关闭检验</button>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="row"><span>处置</span><b>{{ record.get_disposition_display }}</b></div>
+    <div class="row"><span>说明</span><b>{{ record.note|default:"-" }}</b></div>
+  </div>
+  {% endif %}
+</form>
+{% if record.defects.all %}
+<div class="card">
+  <h2>不合格处置</h2>
+  {% for defect in record.defects.all %}
+    <div class="row"><span>{{ defect.get_reason_display|default:"未填原因" }}</span><b>{{ defect.qty }} {{ defect.get_disposition_display }}</b></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

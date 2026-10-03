@@ -1,0 +1,35 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}外协 {{ item.code }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ item.code }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="外协二维码">
+  <div>{{ item.get_status_display }}</div>
+</div>
+<div class="card">
+  <div class="row"><span>工单</span><a href="{% url 'cnc_workorder' item.work_order_id %}">{{ item.work_order }}</a></div>
+  <div class="row"><span>工序</span><b>{{ item.operation|default:"-" }}</b></div>
+  <div class="row"><span>外协厂</span><b>{{ item.vendor|default:"-" }}</b></div>
+  <div class="row"><span>数量</span><b>{{ item.qty }}</b></div>
+  <div class="row"><span>发出</span><b>{{ item.sent_at|default:"-" }}</b></div>
+  <div class="row"><span>回厂</span><b>{{ item.back_at|default:"-" }}</b></div>
+  {% if item.status == 'draft' or item.status == 'sent' %}
+  <form method="post" class="noprint">{% csrf_token %}
+    <input type="hidden" name="action" value="send">
+    <button type="submit">确认发出</button>
+  </form>
+  {% endif %}
+  {% if check %}
+    <div class="row"><a href="{% url 'quality_check' check.pk %}">回厂检验 {{ check.code }}</a><span>{{ check.get_result_display }}</span></div>
+  {% elif item.status == 'back' %}
+    <div class="row"><span>回厂检验</span><b class="late">未完成</b></div>
+  {% endif %}
+  {% if item.status == 'sent' or item.status == 'back' %}
+  <form method="post" class="noprint">{% csrf_token %}
+    <input type="hidden" name="action" value="back">
+    <button class="secondary" type="submit">确认回厂</button>
+  </form>
+  {% endif %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

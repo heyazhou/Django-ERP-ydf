@@ -1,0 +1,77 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ unit }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ unit }}</h2>
+  <img src="{% url 'cnc_qr' unit.qr_token %}" alt="二维码">
+  <div class="row"><span>工单</span><a href="{% url 'cnc_assembly' unit.order.pk %}">{{ unit.order }}</a></div>
+  <div class="row"><span>状态</span><b>{{ unit.get_status_display }}</b></div>
+  <div class="row"><span>工位</span><b>{{ unit.station|default:"未派" }}</b></div>
+  <div class="row"><span>装配员</span><b>{{ unit.assembler|default:"—" }}</b></div>
+  <div class="row"><span>检验</span><b>{{ unit.get_result_display }}</b></div>
+  {% if check %}<div class="row"><a href="{% url 'quality_check' check.pk %}">检验记录 {{ check.code }}</a><span>{{ check.get_result_display }}</span></div>{% endif %}
+</div>
+{% if unit.status == 'wait' or unit.status == 'running' %}
+<div class="card">
+  <h2>开工</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="start">
+    <label>工位
+      <select name="station">
+        <option value="">沿用当前工位</option>
+        {% for station in stations %}
+          <option value="{{ station.pk }}">{{ station }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">开始装配</button>
+  </form>
+</div>
+{% endif %}
+{% if unit.status == 'running' or unit.status == 'wait' %}
+<div class="card">
+  <h2>装完送检</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="finish">
+    <button type="submit">装配完成</button>
+  </form>
+</div>
+{% endif %}
+{% if unit.status != 'wait' %}
+<div class="card">
+  <h2>检验</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="inspect">
+    <label>结论
+      <select name="result">
+        <option value="pass">合格</option>
+        <option value="concession">让步接收</option>
+        <option value="fail">不合格</option>
+      </select>
+    </label>
+    <label>说明<input name="note" value="{{ unit.note }}"></label>
+    <button type="submit">提交检验</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <h2>装入关键件</h2>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="fit">
+    <label>零件
+      <select name="material">
+        {% for part in parts %}
+          <option value="{{ part.material_id }}">{{ part.material }}{% if part.critical %}（关键件）{% endif %}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>批次<input name="lot"></label>
+    <label>数量<input name="qty" inputmode="decimal" value="1"></label>
+    <button class="secondary" type="submit">记录装入</button>
+  </form>
+  {% for fit in fits %}
+    <div class="row"><span>{{ fit.material }}</span><b>{{ fit.lot_no|default:"无批次" }} × {{ fit.qty }}</b></div>
+  {% endfor %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

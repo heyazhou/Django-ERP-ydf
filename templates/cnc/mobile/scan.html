@@ -1,0 +1,61 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}扫码{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>对准二维码</h2>
+  <video id="preview" autoplay playsinline style="width:100%;border-radius:12px;background:#111;min-height:220px;"></video>
+  <button type="button" id="startCam">打开相机</button>
+  <p style="color:#667;font-size:13px;">若浏览器不允许相机，可拍照识别，或直接输入码上的编号。打印二维码前，请用这台电脑的局域网地址打开系统，手机才能扫开。</p>
+  <form method="post" action="{% url 'cnc_identify' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label>拍照识别人脸、条码或二维码</label>
+    <input type="file" name="image" accept="image/*" capture="environment" onchange="this.form.submit()">
+  </form>
+</div>
+<div class="card">
+  <h2>手工输入</h2>
+  <form method="get" action="" id="manual">
+    <label>单据编号</label>
+    <input name="code" id="code" autocomplete="off" placeholder="请输入编号">
+    <button type="submit">打开</button>
+  </form>
+</div>
+<script>
+function go(text) {
+  if (!text) return;
+  var value = String(text).trim();
+  var matched = value.match(/\/m\/q\/([^\/?#]+)/);
+  var token = matched ? decodeURIComponent(matched[1]) : value;
+  if (token.indexOf('http') === 0) return;
+  window.location = '/m/q/' + encodeURIComponent(token) + '/';
+}
+document.getElementById('manual').addEventListener('submit', function (event) {
+  event.preventDefault();
+  go(document.getElementById('code').value);
+});
+async function detectFromVideo(video) {
+  if (!('BarcodeDetector' in window)) return false;
+  var detector = new BarcodeDetector({formats: ['qr_code']});
+  var timer = setInterval(async function () {
+    try {
+      var codes = await detector.detect(video);
+      if (codes && codes.length) {
+        clearInterval(timer);
+        go(codes[0].rawValue);
+      }
+    } catch (err) {}
+  }, 400);
+  return true;
+}
+document.getElementById('startCam').addEventListener('click', async function () {
+  var video = document.getElementById('preview');
+  try {
+    video.srcObject = await navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}});
+    var ok = await detectFromVideo(video);
+    if (!ok) alert('这台手机浏览器不能直接识别，请改用拍照或手工输入编号。');
+  } catch (err) {
+    alert('无法打开相机，请检查权限，或改用手工输入。');
+  }
+});
+</script>
+{% endblock %}

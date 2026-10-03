@@ -1,0 +1,23 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ title }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="二维码">
+</div>
+<div class="card">
+  {% for label, value in rows %}
+    <div class="row"><span>{{ label }}</span><b>{{ value|default:"-" }}</b></div>
+  {% endfor %}
+  {% if file %}
+    <a class="btn" href="{{ file.url }}">打开文件</a>
+  {% endif %}
+  {% if model_file %}
+    <a class="btn secondary" href="{{ model_file.url }}">打开三维模型</a>
+  {% endif %}
+  {% if not file and not model_file %}
+    <div>还没有上传图纸或模型。可在工单页用手机补传。</div>
+  {% endif %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

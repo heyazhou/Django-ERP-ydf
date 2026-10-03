@@ -1,0 +1,15 @@
+*.sqlite3
+.vscode/
+.venv/
+.python/
+.python-installer.exe
+.mysql/
+.mysql-8.4.11-winx64.zip
+upload/
+backup/
+settings.py
+mis/database.local.json
+
+.DS_Store
+__pycache__
+.idea

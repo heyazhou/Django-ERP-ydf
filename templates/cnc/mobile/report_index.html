@@ -1,0 +1,10 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}生产报表{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>报表</h2>
+  {% for key, label in reports %}
+    <a class="btn secondary" href="{% url 'cnc_report' key %}">{{ label }}</a>
+  {% endfor %}
+</div>
+{% endblock %}

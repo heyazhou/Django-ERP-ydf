@@ -1,0 +1,9 @@
+{% if token %}
+<fieldset class="module aligned">
+  <h2>二维码</h2>
+  <div style="padding:12px">
+    <img src="/m/qr/{{ token }}/" alt="二维码" width="160" height="160">
+    <div><a href="/m/q/{{ token }}/">手机打开</a></div>
+  </div>
+</fieldset>
+{% endif %}

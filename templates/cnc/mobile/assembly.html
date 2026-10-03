@@ -1,0 +1,74 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ order.code }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ order.code }} {{ order.title }}</h2>
+  <img src="{% url 'cnc_qr' order.qr_token %}" alt="二维码">
+  <div class="row"><span>状态</span><b>{{ order.get_status_display }}</b></div>
+  <div class="row"><span>总成</span><b>{{ order.product|default:"—" }}</b></div>
+  <div class="row"><span>套数</span><b>{{ order.qty }}</b></div>
+  <div class="row"><span>齐套</span><b>{{ order.kit_text }}</b></div>
+  <div class="row"><span>合格</span><b>{{ order.unit_text }}</b></div>
+  <div class="row"><span>工位</span><b>{{ order.station|default:"未派" }}</b></div>
+  <div class="row"><span>交期</span><b {% if order.is_late %}class="late"{% endif %}>{{ order.due_date|default:"—" }}</b></div>
+  {% if order.status == 'draft' %}
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="release">
+      <button type="submit">按清单下达</button>
+    </form>
+  {% endif %}
+</div>
+<div class="card">
+  <h2>零部件工序</h2>
+  {% for item in components %}
+    <div class="row"><b>{{ item.material }}</b><span>{{ item.headline }}</span></div>
+    {% for job in item.jobs %}
+      <div><a href="{% url 'cnc_workorder' job.order.pk %}">{{ job.order.code }} {{ job.order.title }}</a></div>
+      {% for op in job.operations %}
+        <div class="row">
+          <a href="{% url 'cnc_operation' op.pk %}">{{ op.seq }} {{ op.name }}</a>
+          <span>{{ op.get_status_display }} {{ op.good_qty }}/{{ op.plan_qty }}</span>
+        </div>
+      {% endfor %}
+    {% empty %}
+      <div>无生产工单</div>
+    {% endfor %}
+  {% empty %}
+    <div>还没有零部件。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>配料</h2>
+  {% for part in parts %}
+    <div class="row">
+      <span>{{ part.material }}{% if part.critical %} · 关键件{% endif %}</span>
+      <b>{{ part.issued_qty }}/{{ part.need_qty }} {{ part.get_status_display }}</b>
+    </div>
+    {% if part.status != 'issued' %}
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="issue">
+        <input type="hidden" name="part" value="{{ part.pk }}">
+        <label>本次数量<input name="qty" inputmode="decimal" value="{{ part.per_qty }}"></label>
+        <label>批次<input name="lot" value="{{ part.lot_no }}"></label>
+        <button type="submit">登记配料</button>
+      </form>
+    {% elif part.lot_no %}
+      <div>批次 {{ part.lot_no }}</div>
+    {% endif %}
+  {% empty %}
+    <div>下达后按清单生成配料清单。</div>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>单件</h2>
+  {% for unit in units %}
+    <div class="row">
+      <a href="{% url 'cnc_assembly_unit' unit.pk %}">{{ unit }}</a>
+      <span>{{ unit.get_status_display }}</span>
+    </div>
+  {% empty %}
+    <div>下达后按套数生成序列。</div>
+  {% endfor %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

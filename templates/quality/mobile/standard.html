@@ -1,0 +1,20 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ item.name }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ item.code }} {{ item.name }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="标准二维码">
+  <div>{{ item.get_stage_display }} · {{ item.version }}</div>
+</div>
+<div class="card">
+  {% for line in item.items.all %}
+    <div class="row">
+      <span>{{ line.seq }} {{ line.name }}{% if line.key_size %} · 关键{% endif %}</span>
+      <b>{{ line.nominal|default:"-" }} {{ line.lower_limit }}~{{ line.upper_limit }} {{ line.unit }}</b>
+    </div>
+  {% empty %}
+    <div>还没有检验项目。</div>
+  {% endfor %}
+</div>
+{% include "cnc/mobile/_events.html" %}
+{% endblock %}

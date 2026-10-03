@@ -1,0 +1,24 @@
+{% extends "cnc/mobile/base.html" %}
+{% block title %}{{ item.name }}{% endblock %}
+{% block content %}
+<div class="card qr">
+  <h2 style="text-align:left;">{{ item.code|default:item.qr_token }} {{ item.name }}</h2>
+  <img src="{% url 'cnc_qr' item.qr_token %}" alt="职员二维码">
+  <div>工牌二维码和人脸照片在后台「基础数据」的职员里录入。拍照识别这张码或这张脸，都会打开此页。</div>
+</div>
+{% if item.photo %}<div class="card"><img src="{{ item.photo.url }}" alt="职员照片" style="width:100%;border-radius:12px;"></div>{% endif %}
+<div class="card">
+  <div class="row"><span>岗位</span><b>{{ item.position|default:"-" }}</b></div>
+  <div class="row"><span>电话</span><b>{{ item.phone|default:"-" }}</b></div>
+  <div class="row"><span>登录账号</span><b>{{ item.user|default:"未关联" }}</b></div>
+  <div class="row"><span>已录入人脸</span><b>{{ faces }} 张</b></div>
+</div>
+<div class="card">
+  <h2>当前任务</h2>
+  {% for job in jobs %}
+    <div class="row"><a href="{% url 'cnc_operation' job.pk %}">{{ job.work_order.code }} {{ job.name }}</a><span>{{ job.get_status_display }}</span></div>
+  {% empty %}
+    <div>{% if item.user %}这个账号当前没有在制工序。{% else %}后台把职员关联到登录账号后，这里会列出他的工序。{% endif %}</div>
+  {% endfor %}
+</div>
+{% endblock %}
